@@ -11,6 +11,7 @@ from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vtkmodules.vtkRenderingCore import vtkRenderer
 import json
 import vtk
+import time
 
 class Worker(QThread):
     finished = pyqtSignal(bool, str)   # sukses/gagal + pesan log
@@ -290,6 +291,8 @@ class ReconstructTab(QWidget):
         self.loading = LoadingDialog(self)
         self.loading.show()
 
+        self.start_time = time.time()
+
         self.worker = Worker(fp, pc, out_dir)
         self.worker.finished.connect(self.on_process_finished)
         self.worker.start()
@@ -318,6 +321,8 @@ class ReconstructTab(QWidget):
         self.interactor.Initialize()
 
     def on_process_finished(self, success, message):
+        elapsed_time = time.time() - self.start_time
+        self.log_console.append(f"✅ Process is completed in {elapsed_time:.2f} seconds.")
         self.setEnabled(True)
         self.loading.close()
         if success:
@@ -439,4 +444,5 @@ class LoadingDialog(QDialog):
         # center the dialog on parent
         if parent:
             geo = parent.geometry()
+
             self.setGeometry(geo.center().x() - 100, geo.center().y() - 100, 200, 200)
